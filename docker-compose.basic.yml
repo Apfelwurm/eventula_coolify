@@ -1,0 +1,59 @@
+services:
+    eventula:
+        image: lan2play/eventula-manager:latest
+        volumes:
+        - eventula_manager_storage:/web/html/storage/
+        environment:      
+        - SERVICE_FQDN_EVENTULA_80
+        - UUID=82
+        - GUID=82
+        - APP_KEY=$SERVICE_BASE64_APPKEY
+        - APP_URL=$SERVICE_URL_EVENTULA
+        - APP_EMAIL=${APP_EMAIL}
+        - APP_DEBUG=false
+        - APP_ENV=production
+        - LOG_FILES=false
+        - ENABLE_HTTPS=false
+        - FORCE_APP_HTTPS=true
+        - SESSION_SECURE_COOKIE=true
+        - ENV_OVERRIDE=false
+        - EVENTULA_URL='DISABLE'
+        - APPEAR_DISABLE_CUSTOM_CSS_LINKING=false
+        - APPEAR_DISABLE_ADMIN_APPEARANCE_CSS_SETTINGS=false
+        - DB_DATABASE=${MYSQL_DATABASE:-eventula}
+        - DB_USERNAME=$SERVICE_USER_MYSQL
+        - DB_PASSWORD=$SERVICE_PASSWORD_MYSQL
+        - DB_HOST=mysql
+        - DB_SEED=true
+        - DB_MIGRATE=true
+        - DB_CONNECTION=mysql
+        - DB_PORT=3306
+        - TIMEZONE=Europe/Berlin
+        - TZ=Europe/Berlin
+        exclude_from_hc: true
+        depends_on:
+            mysql:
+                condition: service_healthy
+    mysql:
+        image: mysql:8
+        volumes:
+        - eventula_manager_database:/var/lib/mysql
+        environment:
+        - MYSQL_DATABASE=${MYSQL_DATABASE:-eventula}
+        - MYSQL_USER=${SERVICE_USER_MYSQL}
+        - MYSQL_PASSWORD=${SERVICE_PASSWORD_MYSQL}
+        - MYSQL_ROOT_PASSWORD=${SERVICE_PASSWORD_MYSQLROOT}
+        healthcheck:
+            test:
+                [
+                "CMD",
+                "mysqladmin",
+                "ping",
+                "-h",
+                "127.0.0.1",
+                "-uroot",
+                "-p${SERVICE_PASSWORD_MYSQLROOT}",
+                ]
+            interval: 5s
+            timeout: 20s
+            retries: 10
